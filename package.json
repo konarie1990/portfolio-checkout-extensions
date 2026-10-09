@@ -1,0 +1,25 @@
+{
+  "name": "resume-test-store-oct-5",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "extensions/*"
+  ],
+  "scripts": {
+    "shopify": "shopify",
+    "build": "shopify app build",
+    "dev": "shopify app dev",
+    "info": "shopify app info",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy"
+  },
+  "dependencies": {},
+  "trustedDependencies": [
+    "@shopify/plugin-cloudflare"
+  ],
+  "author": "ronaldhajewski",
+  "private": true,
+  "devDependencies": {
+    "@graphql-codegen/cli": "^7.4.4"
+  }
+}

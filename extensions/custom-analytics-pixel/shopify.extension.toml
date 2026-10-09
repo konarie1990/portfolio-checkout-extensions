@@ -1,0 +1,18 @@
+name = "custom-analytics-pixel"
+type = "web_pixel_extension"
+uid = "464776ea-b4a5-3615-3d6c-bef05a0b89f5f09b2c72"
+runtime_context = "strict"
+
+[settings]
+type = "object"
+
+[settings.fields.accountID]
+name = "Account ID"
+description = "Account ID"
+type = "single_line_text_field"
+validations = [ { name = "min", value = "1" } ]
+
+[settings.fields.endpoint_url]
+name = "API Endpoint URL"
+description = "The destination webhook or server URL where the JSON payload will be sent."
+type = "single_line_text_field"
