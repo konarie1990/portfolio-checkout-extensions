@@ -11,6 +11,7 @@ function Extension() {
   // @ts-ignore
   const [settings, setSettings] = useState(shopify.settings?.value || {});
   const [adding, setAdding] = useState(false);
+  /** @type {[any, any]} */
   const [productData, setProductData] = useState(null);
   const [status, setStatus] = useState("loading");
 
@@ -28,10 +29,10 @@ function Extension() {
   }, []);
 
   useEffect(() => {
-    // 1. Create a flag to track if this specific render is still valid
     let ignore = false;
 
     if (!variantId) {
+      console.warn("Free Gift Extension: No gift_variant_id configured in extension settings.");
       setStatus("error");
       return;
     }
@@ -56,11 +57,12 @@ function Extension() {
           { variables: { id: variantId } }
         );
 
-        // 2. If the component unmounted or re-rendered, abort the state update
         if (ignore) return;
 
+        /** @type {any} */
         const responseData = data;
         if (errors || !responseData?.node) {
+          console.error("Free Gift Extension GraphQL Error:", errors);
           setStatus("error");
           return;
         }
@@ -68,8 +70,8 @@ function Extension() {
         setProductData(responseData.node);
         setStatus("success");
       } catch (error) {
-        // 3. Only set error state if still mounted
         if (!ignore) {
+          console.error("Free Gift Extension Fetch Exception:", error);
           setStatus("error");
         }
       }
@@ -77,25 +79,13 @@ function Extension() {
 
     fetchVariantData();
 
-    // 4. Cleanup function: runs when component unmounts or before next effect runs
     return () => {
       ignore = true;
     };
   }, [variantId]);
 
-  if (!variantId) {
-
-    return null; // Fails silently, renders nothing
-  }
-
-  if (status === "loading") {
-    // Returning null prevents a flicker of "Loading..." text before the component is ready
+  if (!variantId || status === "loading" || status === "error" || !productData) {
     return null;
-  }
-
-  if (status === "error" || !productData) {
-    console.error(`Free Gift Extension: Failed to load product data for ID: ${variantId}`);
-    return null; // Fails silently, renders nothing
   }
 
   // @ts-ignore
@@ -119,46 +109,38 @@ function Extension() {
   const displayImage = String(productData?.image?.url || "https://cdn.shopify.com/s/files/1/0533/2089/files/placeholder-images-image_large.png");
 
   return (
-    <s-banner heading={customHeading}>
-
-      {/* 
-        s-grid replaces InlineLayout in the new web components.
-        - "64px" restricts the image container to a thumbnail size.
-        - "1fr" allows the text stack to fill the remaining middle space.
-        - "auto" shrinks the button container to exactly the width of the button.
-      */}
-      <s-grid gridTemplateColumns="64px 1fr auto" alignItems="center" gap="base">
-
-        <s-image src={displayImage} alt={displayTitle} aspectRatio="1" borderRadius="base" />
-
-        {/* Outer stack uses gap="base" to act as padding between the upper text and the divider */}
-        {/* @ts-ignore */}
-        <s-stack direction="column" gap="base">
-
-          {/* Inner stack 1: Keeps the Title and Description tightly packed together */}
-          {/* @ts-ignore */}
-          <s-stack direction="column" gap="none">
-            <s-text type="emphasis">{displayTitle}</s-text>
-            <s-text>{displayDescription}</s-text>
-          </s-stack>
-
-          {/* Inner stack 2: Conditionally renders the divider and extra text with its own spacing */}
-          {extraDescriptionText && (
-            /* @ts-ignore */
-            <s-stack direction="column" gap="base">
-              <s-divider />
-              <s-text appearance="subdued">{extraDescriptionText}</s-text>
-            </s-stack>
-          )}
-
+    <s-box background="subdued" padding="base" border="base" borderRadius="base">
+      <s-stack direction="block" gap="base">
+        
+        {/* Header Title with Info Icon */}
+        <s-stack direction="inline" gap="small-200" alignItems="center">
+          <s-icon type="info" tone="info" />
+          <s-text type="strong">{customHeading}</s-text>
         </s-stack>
 
-        <s-button variant="primary" onClick={handleAddGift} loading={adding} disabled={hasGift}>
-          {hasGift ? "Added" : "Add"}
-        </s-button>
+        <s-grid gridTemplateColumns="64px 1fr auto" alignItems="center" gap="base">
+          <s-image src={displayImage} alt={displayTitle} aspectRatio="1" borderRadius="base" />
 
-      </s-grid>
+          <s-stack direction="block" gap="base">
+            <s-stack direction="block" gap="none">
+              <s-text type="emphasis">{displayTitle}</s-text>
+              <s-text>{displayDescription}</s-text>
+            </s-stack>
 
-    </s-banner>
+            {extraDescriptionText && (
+              <s-stack direction="block" gap="base">
+                <s-divider />
+                <s-text tone="subdued">{extraDescriptionText}</s-text>
+              </s-stack>
+            )}
+          </s-stack>
+
+          <s-button variant="primary" onClick={handleAddGift} loading={adding} disabled={hasGift}>
+            {hasGift ? "Added" : "Add"}
+          </s-button>
+        </s-grid>
+
+      </s-stack>
+    </s-box>
   );
 }
